@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+
     environment {
         TELEGRAM_TOKEN = "7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0"
         TELEGRAM_CHAT_ID = "292560946"
@@ -12,19 +12,19 @@ pipeline {
                 checkout scm
             }
         }
-        
+
         stage('Install') {
             steps {
                 bat 'npm install'
             }
         }
-        
+
         stage('Test') {
             steps {
                 bat 'npx cross-env NODE_ENV=test PORT=3000 npm test'
             }
         }
-        
+
         stage('Deploy') {
             steps {
                 script {
@@ -34,8 +34,8 @@ pipeline {
                 }
             }
         }
-        
-        stage('Notify') {
+
+        stage('Notify Success') {
             steps {
                 script {
                     sendTelegramNotification(true)
@@ -43,7 +43,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         failure {
             script {
@@ -54,22 +54,20 @@ pipeline {
 }
 
 def sendTelegramNotification(Boolean isSuccess) {
-    def message = isSuccess ? 
-        """✅ Сборка #${env.BUILD_NUMBER} успешна!
-📁 Проект: animal-farm-nodejs
-🔗 Детали: ${env.BUILD_URL}""" : 
-        """❌ Сборка #${env.BUILD_NUMBER} упала!
-📁 Проект: animal-farm-nodejs
-🔍 Логи: ${env.BUILD_URL}console"""
-    
-    // Кодируем параметры отдельно для надежности
-    def encodedMessage = URLEncoder.encode(message, "UTF-8")
-    def encodedChatId = URLEncoder.encode(env.TELEGRAM_CHAT_ID, "UTF-8")
-    
+    def status = isSuccess ? "✅ Сборка *успешна*" : "❌ Сборка *упала*"
+    def buildUrl = env.BUILD_URL.replace("&", "%26") // экранируем &
+    def message = """${status}
+📦 *Проект:* animal-farm-nodejs
+🔢 *Сборка:* #${env.BUILD_NUMBER}
+🔗 [Открыть в Jenkins](${buildUrl})"""
+
+    // Экранируем кавычки для bat-скрипта
+    def escapedMessage = message.replace('"', '\\"')
+
     bat """
         curl -s -X POST "https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage" ^
-            -d "chat_id=${encodedChatId}" ^
-            -d "text=${encodedMessage}" ^
-            -d "parse_mode=Markdown"
+             -d "chat_id=${env.TELEGRAM_CHAT_ID}" ^
+             -d "text=${escapedMessage}" ^
+             -d "parse_mode=Markdown"
     """
 }
