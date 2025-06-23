@@ -7,7 +7,7 @@
     "underscore": "^1.12.1"
   },
   "scripts": {
-    "test": "nyc --reporter=html mocha --exit",
+    "test": "exit 1",
     "start": "node app.js"
   },
   "devDependencies": {
