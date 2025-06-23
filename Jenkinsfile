@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS 18' // Убедись, что в Jenkins Global Tool Configuration есть NodeJS с таким именем
+        nodejs 'NodeJS 18'
     }
 
     stages {
@@ -42,14 +42,19 @@ pipeline {
         always {
             echo 'Pipeline finished.'
         }
+
         success {
             echo 'Pipeline succeeded!'
             telegramSend botToken: '7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0',
                          chatId: '292560946',
                          message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
+
         failure {
             echo 'Pipeline failed!'
             telegramSend botToken: '7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0',
                          chatId: '292560946',
                          message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+        }
+    }
+}
