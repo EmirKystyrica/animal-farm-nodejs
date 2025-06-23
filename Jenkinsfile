@@ -1,58 +1,66 @@
 pipeline {
     agent any
-
-    tools {
-        nodejs 'NodeJS 18'
+    
+    environment {
+        TELEGRAM_TOKEN = "7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0"
+        TELEGRAM_CHAT_ID = "292560946"  // Ваш chat ID
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'github-token',
-                    url: 'https://github.com/EmirKystyrica/animal-farm-nodejs.git',
-                    branch: 'main'
+                checkout scm
             }
         }
-
-        stage('Install dependencies') {
+        
+        stage('Install') {
             steps {
-                echo 'Installing dependencies...'
                 bat 'npm install'
             }
         }
-
+        
         stage('Test') {
             steps {
-                echo 'Running tests...'
                 bat 'npx cross-env NODE_ENV=test PORT=3000 npm test'
             }
         }
-
-        stage('Build / Run') {
+        
+        stage('Deploy') {
             steps {
-                echo 'Starting app, waiting 10 seconds and killing process...'
-                bat '''
-                    start /B npx cross-env PORT=3001 node app.js
-                    timeout /t 10 /nobreak
-                    taskkill /im node.exe /f
-                '''
+                script {
+                    bat 'start /B npx cross-env PORT=3001 node app.js'
+                    sleep(time: 10, unit: 'SECONDS')
+                    bat 'taskkill /im node.exe /f'
+                }
+            }
+        }
+        
+        stage('Notify Success') {
+            steps {
+                script {
+                    sendTelegramMessage("✅ Сборка #${env.BUILD_NUMBER} успешна!")
+                }
             }
         }
     }
-
+    
     post {
-        always {
-            echo 'Pipeline finished.'
-        }
-
-        success {
-            echo 'Pipeline succeeded!'
-            telegramSend message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-        }
-
         failure {
-            echo 'Pipeline failed!'
-            telegramSend message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            script {
+                sendTelegramMessage("❌ Сборка #${env.BUILD_NUMBER} упала!")
+            }
         }
     }
 }
+
+def sendTelegramMessage(String text) {
+    def fullMessage = "${text}\n" +
+                     "📁 Проект: animal-farm-nodejs\n" +
+                     "🔗 Подробности: ${env.BUILD_URL}"
+    
+    def telegramUrl = "https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage"
+    def payload = [
+        'chat_id': env.TELEGRAM_CHAT_ID,
+        'text': fullMessage,
+        'parse_mode': 'Markdown'
+    ].collect { k, v -> "$k=${URLEncoder.encode(v
