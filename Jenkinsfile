@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
-        TELEGRAM_TOKEN = "7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0"
-        TELEGRAM_CHAT_ID = "292560946"
+        TELEGRAM_BOT_TOKEN = 'your_bot_token_here'
+        TELEGRAM_CHAT_ID = 'your_chat_id_here'
+        PROJECT_NAME = 'animal-farm-nodejs'
     }
 
     stages {
@@ -28,8 +29,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    // Запуск в фоне
                     bat 'start /B npx cross-env PORT=3001 node app.js'
-                    sleep(time: 10, unit: 'SECONDS')
+                    sleep time: 10, unit: 'SECONDS'
+                    // Завершение node-процесса
                     bat 'taskkill /im node.exe /f'
                 }
             }
@@ -37,30 +40,24 @@ pipeline {
 
         stage('Notify Success') {
             steps {
-                script {
-                    sendTelegramNotification(true)
-                }
+                powershell '''
+                    $text = "Сборка УСПЕШНА | Проект: ${env.PROJECT_NAME} | Jenkins: http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                    $uri = "https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage"
+                    $body = @{ chat_id = "${env.TELEGRAM_CHAT_ID}"; text = $text }
+                    Invoke-RestMethod -Uri $uri -Method Post -Body $body
+                '''
             }
         }
     }
 
     post {
         failure {
-            script {
-                sendTelegramNotification(false)
-            }
+            powershell '''
+                $text = "❌ Сборка ПРОВАЛЕНА | Проект: ${env.PROJECT_NAME} | Jenkins: http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                $uri = "https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage"
+                $body = @{ chat_id = "${env.TELEGRAM_CHAT_ID}"; text = $text }
+                Invoke-RestMethod -Uri $uri -Method Post -Body $body
+            '''
         }
     }
-}
-
-def sendTelegramNotification(Boolean isSuccess) {
-    def status = isSuccess ? "Сборка УСПЕШНА" : "Сборка УПАЛА"
-    def text = "${status} | Проект: animal-farm-nodejs | Сборка #${env.BUILD_NUMBER} | Jenkins: ${env.BUILD_URL}"
-
-    // Убираем кавычки и emoji, отправляем одним curl-запросом
-    bat """
-        curl -s -X POST "https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage" ^
-             -d chat_id=${env.TELEGRAM_CHAT_ID} ^
-             -d text="${text}"
-    """
 }
