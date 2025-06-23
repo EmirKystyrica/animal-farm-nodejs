@@ -2,12 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS 18' // Убедись, что в Jenkins -> Global Tool Configuration есть NodeJS с таким именем
-    }
-
-    environment {
-        TELEGRAM_BOT_TOKEN = '7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0'
-        TELEGRAM_CHAT_ID = 292560946
+        nodejs 'NodeJS 18'
     }
 
     stages {
@@ -52,16 +47,12 @@ pipeline {
 
         success {
             echo 'Pipeline succeeded!'
-            telegramSend botToken: "${env.TELEGRAM_BOT_TOKEN}",
-                         chatId: TELEGRAM_CHAT_ID,
-                         message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            telegramSend message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
 
         failure {
             echo 'Pipeline failed!'
-            telegramSend botToken: "${env.TELEGRAM_BOT_TOKEN}",
-                         chatId: TELEGRAM_CHAT_ID,
-                         message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            telegramSend message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
     }
 }
