@@ -54,20 +54,13 @@ pipeline {
 }
 
 def sendTelegramNotification(Boolean isSuccess) {
-    def status = isSuccess ? "✅ Сборка *успешна*" : "❌ Сборка *упала*"
-    def buildUrl = env.BUILD_URL.replace("&", "%26") // экранируем &
-    def message = """${status}
-📦 *Проект:* animal-farm-nodejs
-🔢 *Сборка:* #${env.BUILD_NUMBER}
-🔗 [Открыть в Jenkins](${buildUrl})"""
+    def status = isSuccess ? "Сборка УСПЕШНА" : "Сборка УПАЛА"
+    def text = "${status} | Проект: animal-farm-nodejs | Сборка #${env.BUILD_NUMBER} | Jenkins: ${env.BUILD_URL}"
 
-    // Экранируем кавычки для bat-скрипта
-    def escapedMessage = message.replace('"', '\\"')
-
+    // Убираем кавычки и emoji, отправляем одним curl-запросом
     bat """
         curl -s -X POST "https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage" ^
-             -d "chat_id=${env.TELEGRAM_CHAT_ID}" ^
-             -d "text=${escapedMessage}" ^
-             -d "parse_mode=Markdown"
+             -d chat_id=${env.TELEGRAM_CHAT_ID} ^
+             -d text="${text}"
     """
 }
