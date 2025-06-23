@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS 18'
+        nodejs 'NodeJS 18' // Убедись, что в Jenkins Global Tool Configuration есть NodeJS с таким именем
     }
 
     stages {
@@ -40,11 +40,13 @@ pipeline {
         }
         success {
             echo 'Pipeline succeeded!'
-            telegramSend message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            // В Telegram Bot Plugin **нет поля для chatId в настройках Jenkins** — поэтому
+            // нужно указывать chatId напрямую в скрипте, чтобы бот знал, куда слать уведомления
+            telegramSend(chatId: '292560946', message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
         }
         failure {
             echo 'Pipeline failed!'
-            telegramSend message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            telegramSend(chatId: '292560946', message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
         }
     }
 }
