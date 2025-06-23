@@ -29,10 +29,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Запуск сервера на фоне
                     bat 'start /B npx cross-env PORT=3001 node app.js'
                     sleep time: 10, unit: 'SECONDS'
-                    // Завершение node-процесса
                     bat 'taskkill /im node.exe /f'
                 }
             }
@@ -41,10 +39,14 @@ pipeline {
         stage('Notify Success') {
             steps {
                 powershell '''
-                    $text = "✅ Сборка УСПЕШНА | Проект: ${env.PROJECT_NAME} | Сборка #${env.BUILD_NUMBER} | Jenkins: http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                    $text = "✅ Сборка УСПЕШНА\\nПроект: ${env.PROJECT_NAME}\\nСборка #${env.BUILD_NUMBER}\\nJenkins: http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
                     $uri = "https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage"
-                    $body = @{ chat_id = "${env.TELEGRAM_CHAT_ID}"; text = $text }
-                    Invoke-RestMethod -Uri $uri -Method Post -Body $body
+                    $payload = @{
+                        chat_id = "${env.TELEGRAM_CHAT_ID}"
+                        text = $text
+                        parse_mode = "Markdown"
+                    } | ConvertTo-Json -Depth 3
+                    Invoke-RestMethod -Uri $uri -Method Post -Body $payload -ContentType "application/json"
                 '''
             }
         }
@@ -53,10 +55,14 @@ pipeline {
     post {
         failure {
             powershell '''
-                $text = "❌ Сборка ПРОВАЛЕНА | Проект: ${env.PROJECT_NAME} | Сборка #${env.BUILD_NUMBER} | Jenkins: http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+                $text = "❌ Сборка ПРОВАЛЕНА\\nПроект: ${env.PROJECT_NAME}\\nСборка #${env.BUILD_NUMBER}\\nJenkins: http://localhost:8080/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
                 $uri = "https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage"
-                $body = @{ chat_id = "${env.TELEGRAM_CHAT_ID}"; text = $text }
-                Invoke-RestMethod -Uri $uri -Method Post -Body $body
+                $payload = @{
+                    chat_id = "${env.TELEGRAM_CHAT_ID}"
+                    text = $text
+                    parse_mode = "Markdown"
+                } | ConvertTo-Json -Depth 3
+                Invoke-RestMethod -Uri $uri -Method Post -Body $payload -ContentType "application/json"
             '''
         }
     }
