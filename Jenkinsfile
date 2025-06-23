@@ -2,13 +2,12 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS 18' // Имя NodeJS из Jenkins Global Tool Configuration
+        nodejs 'NodeJS 18' // Убедись, что в Jenkins Global Tool Configuration есть NodeJS с таким именем
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out source code...'
                 git credentialsId: 'github-token', url: 'https://github.com/EmirKystyrica/animal-farm-nodejs.git', branch: 'main'
             }
         }
@@ -23,17 +22,18 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // Используем npx, чтобы cross-env заработал в Jenkins на Windows
-                bat 'npx cross-env NODE_ENV=test PORT=3000 npm test'
+                bat 'npx cross-env NODE_ENV=test PORT=3000 npm test' // если нет тестов, закомментируй или пропусти
             }
         }
 
         stage('Build / Run') {
             steps {
-                echo 'Starting app...'
-                // Чтобы не блокировать сборку, лучше запускать в фоне или через отдельный скрипт
-                // Но для простоты запускаем так:
-                bat 'npx cross-env PORT=3001 node app.js'
+                echo 'Starting app, waiting 10 seconds and killing process...'
+                bat '''
+                    start /B npx cross-env PORT=3001 node app.js
+                    timeout /t 10 /nobreak
+                    taskkill /im node.exe /f
+                '''
             }
         }
     }
