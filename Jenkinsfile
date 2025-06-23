@@ -45,16 +45,5 @@ pipeline {
 
         success {
             echo 'Pipeline succeeded!'
-            telegramSend botToken: '7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0',
-                         chatId: '292560946',
-                         message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-        }
-
-        failure {
-            echo 'Pipeline failed!'
-            telegramSend botToken: '7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0',
-                         chatId: '292560946',
-                         message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-        }
-    }
-}
+            telegramSend chatId: 292560946,
+                         message: "✅ Сборка п
