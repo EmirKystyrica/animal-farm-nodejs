@@ -42,11 +42,11 @@ pipeline {
             echo 'Pipeline succeeded!'
             // В Telegram Bot Plugin **нет поля для chatId в настройках Jenkins** — поэтому
             // нужно указывать chatId напрямую в скрипте, чтобы бот знал, куда слать уведомления
-            telegramSend(chatId: '292560946', message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+            telegramSend(chatId: 292560946, message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
         }
         failure {
             echo 'Pipeline failed!'
-            telegramSend(chatId: '292560946', message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+            telegramSend(chatId: 292560946, message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
         }
     }
 }
