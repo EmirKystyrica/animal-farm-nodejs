@@ -15,21 +15,21 @@ pipeline {
         stage('Install dependencies') {
             steps {
                 echo 'Installing dependencies...'
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                sh 'npm test' // если нет тестов, закомментируй
+                bat 'npm test' // если нет тестов, закомментируй
             }
         }
 
         stage('Build / Run') {
             steps {
                 echo 'Starting app...'
-                sh 'npm start'
+                bat 'npm start'
             }
         }
     }
