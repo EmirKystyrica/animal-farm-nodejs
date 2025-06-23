@@ -22,7 +22,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                bat 'npx cross-env NODE_ENV=test PORT=3000 npm test' // если нет тестов, закомментируй или пропусти
+                bat 'npx cross-env NODE_ENV=test PORT=3000 npm test'
             }
         }
 
@@ -44,11 +44,12 @@ pipeline {
         }
         success {
             echo 'Pipeline succeeded!'
-            telegramSend(chatId: 292560946, message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
+            telegramSend botToken: '7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0',
+                         chatId: '292560946',
+                         message: "✅ Сборка прошла успешно: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
         failure {
             echo 'Pipeline failed!'
-            telegramSend(chatId: 292560946, message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}")
-        }
-    }
-}
+            telegramSend botToken: '7794210694:AAE7oZscUYib7fK7sVw2JGS3OlXfwdfRNx0',
+                         chatId: '292560946',
+                         message: "❌ Сборка упала: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
