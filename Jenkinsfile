@@ -14,7 +14,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                bat 'npx cross-env NODE_ENV=test PORT=3000 npm test'
+                bat 'npx cross-env NODE_ENV=test PORT=8080 npm test'
             }
         }
         stage('Deploy') {
